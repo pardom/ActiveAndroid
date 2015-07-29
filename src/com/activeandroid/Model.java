@@ -43,6 +43,7 @@ public abstract class Model {
 	//////////////////////////////////////////////////////////////////////////////////////
 
 	private Long mId = null;
+	private boolean mDeleted = false;
 
 	private final TableInfo mTableInfo;
 	private final String idName;
@@ -66,6 +67,7 @@ public abstract class Model {
 	public final void delete() {
 		Cache.openDatabase().delete(mTableInfo.getTableName(), idName+"=?", new String[] { getId().toString() });
 		Cache.removeEntity(this);
+		mDeleted = true;
 
 		Cache.getContext().getContentResolver()
 				.notifyChange(ContentProvider.createUri(mTableInfo.getType(), mId), null);
@@ -151,8 +153,9 @@ public abstract class Model {
 			}
 		}
 
-		if (mId == null) {
+		if (mId == null || mDeleted) {
 			mId = db.insert(mTableInfo.getTableName(), null, values);
+			mDeleted = false;
 		}
 		else {
 			db.update(mTableInfo.getTableName(), values, idName+"=" + mId, null);
